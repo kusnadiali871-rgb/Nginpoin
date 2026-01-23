@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NginPoin - URL Shortener</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f7ff;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .short-url {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .short-url input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            font-size: 16px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .copy-btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #764ba2;
+        }
+
+        .url-list {
+            margin-top: 20px;
+        }
+
+        .url-item {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .url-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .url-item-code {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .url-item-clicks {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .url-item-long {
+            color: #666;
+            font-size: 14px;
+            word-break: break-all;
+            margin-bottom: 8px;
+        }
+
+        .url-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .small-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .copy-small {
+            background: #667eea;
+            color: white;
+        }
+
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+        }
+
+        .error {
+            background: #ffe0e0;
+            color: #d00;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔗 NginPoin</h1>
+            <p>URL Shortener Gratis & Cepat</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('create')">Buat Short URL</button>
+            <button class="tab" onclick="switchTab('list')">Daftar URL</button>
+        </div>
+
+        <div id="createTab" class="tab-content active">
+            <div class="card">
+                <h2 style="margin-bottom: 20px;">Buat URL Pendek Baru</h2>
+                
+                <div class="input-group">
+                    <label>URL Panjang *</label>
+                    <input type="url" id="longUrl" placeholder="https://example.com/very/long/url" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Custom Code (opsional)</label>
+                    <input type="text" id="customCode" placeholder="misal: promo2024" maxlength="20">
+                    <small style="color: #666;">Kosongkan untuk generate otomatis</small>
+                </div>
+
+                <button class="btn" onclick="createShortUrl()">🚀 Buat Short URL</button>
+
+                <div class="error" id="error"></div>
+
+                <div class="result" id="result">
+                    <h3>✅ Short URL Berhasil Dibuat!</h3>
+                    <div class="short-url">
+                        <input type="text" id="shortUrlDisplay" readonly>
+                        <button class="copy-btn" onclick="copyShortUrl()">📋 Copy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="listTab" class="tab-content">
+            <div class="stats" id="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalUrls">0</div>
+                    <div class="stat-label">Total URLs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalClicks">0</div>
+                    <div class="stat-label">Total Klik</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 style="margin-bottom: 20px;">Semua Short URL</h2>
+                <div id="urlList" class="url-list">
+                    <div class="loading">Memuat data...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, increment, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAbWMjmN467wiW09SkP7EIvNQzt_gU3baU",
+            authDomain: "nginpoin-f87ee.firebaseapp.com",
+            databaseURL: "https://nginpoin-f87ee-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "nginpoin-f87ee",
+            storageBucket: "nginpoin-f87ee.firebasestorage.app",
+            messagingSenderId: "136519463359",
+            appId: "1:136519463359:web:69bfab0160057b9678b10a",
+            measurementId: "G-2YF8790H47"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.collection = collection;
+        window.addDoc = addDoc;
+        window.getDocs = getDocs;
+        window.deleteDoc = deleteDoc;
+        window.doc = doc;
+        window.updateDoc = updateDoc;
+        window.increment = increment;
+        window.query = query;
+        window.orderBy = orderBy;
+
+        loadUrlList();
+    </script>
+
+    <script>
+        function generateCode() {
+            const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+
+        function showError(msg) {
+            const errorEl = document.getElementById('error');
+            errorEl.textContent = msg;
+            errorEl.classList.add('show');
+            setTimeout(() => errorEl.classList.remove('show'), 5000);
+        }
+
+        async function createShortUrl() {
+            const longUrl = document.getElementById('longUrl').value.trim();
+            const customCode = document.getElementById('customCode').value.trim();
+
+            if (!longUrl) {
+                showError('URL panjang harus diisi!');
+                return;
+            }
+
+            if (!longUrl.startsWith('http://') && !longUrl.startsWith('https://')) {
+                showError('URL harus dimulai dengan http:// atau https://');
+                return;
+            }
+
+            const code = customCode || generateCode();
+
+            try {
+                const existingUrls = await getDocs(collection(db, 'urls'));
+                const exists = existingUrls.docs.some(doc => doc.data().code === code);
+                
+                if (exists) {
+                    showError('Kode sudah digunakan! Gunakan kode lain atau biarkan kosong untuk generate otomatis.');
+                    return;
+                }
+
+                await addDoc(collection(db, 'urls'), {
+                    code: code,
+                    longUrl: longUrl,
+                    clicks: 0,
+                    createdAt: new Date().toISOString()
+                });
+
+                const shortUrl = `${window.location.origin}/${code}`;
+                document.getElementById('shortUrlDisplay').value = shortUrl;
+                document.getElementById('result').classList.add('show');
+                
+                document.getElementById('longUrl').value = '';
+                document.getElementById('customCode').value = '';
+                
+                loadUrlList();
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Gagal membuat short URL. Coba lagi!');
+            }
+        }
+
+        function copyShortUrl() {
+            const input = document.getElementById('shortUrlDisplay');
+            input.select();
+            document.execCommand('copy');
+            
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '✅ Copied!';
+            setTimeout(() => btn.textContent = originalText, 2000);
+        }
+
+        function copyUrl(url) {
+            const tempInput = document.createElement('input');
+            tempInput.value = url;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '✅ Copied';
+            setTimeout(() => btn.textContent = originalText, 2000);
+        }
+
+        async function deleteUrl(docId) {
+            if (!confirm('Yakin mau hapus URL ini?')) return;
+
+            try {
+                await deleteDoc(doc(db, 'urls', docId));
+                loadUrlList();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Gagal menghapus URL');
+            }
+        }
+
+        async function loadUrlList() {
+            const urlList = document.getElementById('urlList');
+            urlList.innerHTML = '<div class="loading">Memuat data...</div>';
+
+            try {
+                const q = query(collection(db, 'urls'), orderBy('createdAt', 'desc'));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    urlList.innerHTML = '<p style="text-align:center;color:#666;">Belum ada short URL. Buat yang pertama!</p>';
+                    document.getElementById('totalUrls').textContent = '0';
+                    document.getElementById('totalClicks').textContent = '0';
+                    return;
+                }
+
+                let html = '';
+                let totalClicks = 0;
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const shortUrl = `${window.location.origin}/${data.code}`;
+                    totalClicks += data.clicks || 0;
+
+                    html += `
+                        <div class="url-item">
+                            <div class="url-item-header">
+                                <span class="url-item-code">/${data.code}</span>
+                                <span class="url-item-clicks">${data.clicks || 0} klik</span>
+                            </div>
+                            <div class="url-item-long">${data.longUrl}</div>
+                            <div class="url-item-actions">
+                                <button class="small-btn copy-small" onclick="copyUrl('${shortUrl}')">📋 Copy</button>
+                                <button class="small-btn delete-btn" onclick="deleteUrl('${doc.id}')">🗑️ Hapus</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                urlList.innerHTML = html;
+                document.getElementById('totalUrls').textContent = querySnapshot.size;
+                document.getElementById('totalClicks').textContent = totalClicks;
+
+            } catch (error) {
+                console.error('Error:', error);
+                urlList.innerHTML = '<p style="text-align:center;color:#d00;">Gagal memuat data</p>';
+            }
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+
+            if (tabName === 'list') {
+                loadUrlList();
+            }
+        }
+
+        // Handle URL redirect
+        window.addEventListener('load', async () => {
+            const path = window.location.pathname.substring(1);
+            if (path && path !== '') {
+                try {
+                    const querySnapshot = await getDocs(collection(db, 'urls'));
+                    const urlDoc = querySnapshot.docs.find(doc => doc.data().code === path);
+                    
+                    if (urlDoc) {
+                        await updateDoc(doc(db, 'urls', urlDoc.id), {
+                            clicks: increment(1)
+                        });
+                        window.location.href = urlDoc.data().longUrl;
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
